@@ -30,7 +30,7 @@ routes.get("/iot/elec",(req,res) => {
     });
 });
 
-routes.get("/iot/elec/history", async(req,res) => {
+routes.get("/iot/elec/devices", async(req,res) => {
     return res.json(await WattageDeviceModel.find());
 });
 
@@ -53,9 +53,9 @@ client.on("connect", () => {
     })
 
     client.subscribe("/iot/elec/save", (err) => {
-        if(!err) {
+    });
 
-        }
+    client.subscribe("/iot/elec/update", (err) => {
     });
 });
 
@@ -66,10 +66,17 @@ client.on("message", async (topic,message) => {
     if(topic.toString() === "/iot/elec/save"){
         const { Wattage, Device } = JSON.parse(message.toString());
 
+        if (await WattageDeviceModel.findOne({Device_id:Device}) !== {}) return;
+
         await WattageDeviceModel.create({
             Wattage:Wattage,
             Device_id:Device
         });
+    }
+    if(topic.toString() === "/iot/elec/update"){
+        const { Wattage, Device } = JSON.parse(message.toString());
+
+        await WattageDeviceModel.updateOne({Device_id:Device},{Wattage:Wattage});
     }
 });
 

@@ -5,4 +5,4 @@ const WattageDeviceSchema = new mongoose.Schema({
     Wattage: Number
 });
 
-module.exports = mongoose.model('Wattage_Measures',WattageDeviceSchema);
+module.exports = mongoose.model('Devices',WattageDeviceSchema);
