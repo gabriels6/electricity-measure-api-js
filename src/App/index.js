@@ -66,7 +66,10 @@ client.on("message", async (topic,message) => {
     if(topic.toString() === "/iot/elec/save"){
         const { Wattage, Device } = JSON.parse(message.toString());
 
-        if (await WattageDeviceModel.findOne({Device_id:Device}) !== {}) return;
+        if (await WattageDeviceModel.findOne({Device_id:Device}) !== null){
+            return;
+        }
+
 
         await WattageDeviceModel.create({
             Wattage:Wattage,
@@ -75,6 +78,8 @@ client.on("message", async (topic,message) => {
     }
     if(topic.toString() === "/iot/elec/update"){
         const { Wattage, Device } = JSON.parse(message.toString());
+
+        if (await WattageDeviceModel.findOne({Device_id:Device}) === null) return;
 
         await WattageDeviceModel.updateOne({Device_id:Device},{Wattage:Wattage});
     }
