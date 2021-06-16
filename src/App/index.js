@@ -30,8 +30,8 @@ routes.get("/iot/elec",(req,res) => {
     });
 });
 
-routes.get("/iot/elec/history",(req,res) => {
-    return res.json(WattageDeviceModel.find());
+routes.get("/iot/elec/history", async(req,res) => {
+    return res.json(await WattageDeviceModel.find());
 });
 
 const app = express();
