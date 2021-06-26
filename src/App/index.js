@@ -34,6 +34,14 @@ routes.get("/iot/elec/devices", async(req,res) => {
     return res.json(await WattageDeviceModel.find());
 });
 
+routes.get("/iot/elec/devices/:Device_id",async (req, res) => {
+    const params = req.params;
+
+    return res.json(await WattageDeviceModel.findOne({Device_id:params.Device_id}));
+});
+
+WattageDeviceModel.findOne()
+
 const app = express();
 
 app.use(cors());
