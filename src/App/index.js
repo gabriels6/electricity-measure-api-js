@@ -4,14 +4,13 @@ const mqtt = require("mqtt");
 const client = mqtt.connect("ws://scout-mqtt-broker.herokuapp.com");
 const cors = require("cors");
 const express = require("express");
-const { Router } = require("express");
+const routes = require('../Routes');
+
 const mongoose = require('mongoose');
 
 const WattageDeviceModel = require("../Models/WattageDeviceModel");
+const BuildingConsumptionModel = require('../Models/BuildingConsumptionModel');
 
-const routes = Router();
-
-let wattage = 0
 
 const config = {
     url:'mongodb+srv://'+process.env.user+':'+process.env.pass+'@cluster-test.q4jsk.gcp.mongodb.net/'+process.env.database+'?retryWrites=true&w=majority'
@@ -24,21 +23,7 @@ mongoose.connect(config.url,
     }
 );
 
-routes.get("/iot/elec",(req,res) => {
-    return res.json({
-        Wattage:wattage
-    });
-});
 
-routes.get("/iot/elec/devices", async(req,res) => {
-    return res.json(await WattageDeviceModel.find());
-});
-
-routes.get("/iot/elec/devices/:Device_id",async (req, res) => {
-    const params = req.params;
-
-    return res.json(await WattageDeviceModel.findOne({Device_id:params.Device_id}));
-});
 
 WattageDeviceModel.findOne()
 
@@ -68,16 +53,15 @@ client.on("connect", () => {
 });
 
 client.on("message", async (topic,message) => {
-    if(topic.toString() === "/iot/elec"){
-        wattage = parseInt(message.toString());
-    }
+
+    console.log("Topic: " + topic + "Message: " + message)
+
     if(topic.toString() === "/iot/elec/save"){
         const { Wattage, Device } = JSON.parse(message.toString());
 
         if (await WattageDeviceModel.findOne({Device_id:Device}) !== null){
             return;
         }
-
 
         await WattageDeviceModel.create({
             Wattage:Wattage,
@@ -89,7 +73,18 @@ client.on("message", async (topic,message) => {
 
         if (await WattageDeviceModel.findOne({Device_id:Device}) === null) return;
 
+        const Building = await BuildingConsumptionModel.findOne({
+            House_id: "house_a"
+        });
+
+        let newWattage = Building.Wattage + Wattage;
+
         await WattageDeviceModel.updateOne({Device_id:Device},{Wattage:Wattage});
+
+
+        await BuildingConsumptionModel.updateOne({
+            House_id:"house_a"
+        },{ Wattage: newWattage});
     }
 });
 
